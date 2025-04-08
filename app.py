@@ -1,34 +1,55 @@
 import streamlit as st
-import cv2
-import numpy as np
-from PIL import Image
 import pickle
+import os
 from feature_extractor import extract_features
 
-# Load model
-with open('model/seed_quality_model.pkl', 'rb') as f:
+# Load trained model
+with open("model/seed_quality_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-
 st.set_page_config(page_title="Seed Quality Analyzer", layout="centered")
-st.title("🌱 Automated Seed Quality Analyzer")
-st.write("Upload an image of a seed to check its quality (Good / Average / Bad)")
+st.title("🌾 Seed Quality Analyzer")
+st.markdown("Upload a clear image of a **single seed** to assess its quality.")
 
-uploaded_file = st.file_uploader("Choose a seed image...", type=["jpg", "jpeg", "png"])
+# Track state across interactions
+if "analyzed" not in st.session_state:
+    st.session_state.analyzed = False
+
+# File upload section
+uploaded_file = st.file_uploader("📁 Upload Seed Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Seed Image', use_column_width=True)
+    temp_path = "temp_image.png"
+    with open(temp_path, "wb") as f:
+        f.write(uploaded_file.read())
 
-    # Save temp image for OpenCV to read
-    temp_path = "temp_seed.jpg"
-    image.save(temp_path)
+    st.image(temp_path, caption="📷 Uploaded Image", use_container_width=True)
 
     if st.button("🔍 Analyze Quality"):
         try:
             features = extract_features(temp_path).reshape(1, -1)
             prediction = model.predict(features)[0]
+
             st.success(f"🌾 Predicted Quality: **{prediction}**")
+
+            # --- Show detailed feature insights ---
+            st.markdown("### 🔍 Feature Insights")
+
+            feature_labels = {
+                0: ("Red Mean", "Color intensity in red channel"),
+                1: ("Green Mean", "Color intensity in green channel"),
+                2: ("Blue Mean", "Color intensity in blue channel"),
+                3: ("Aspect Ratio", "Shape balance (w/h) — lower = more round"),
+                4: ("Contour Area", "Size of the seed"),
+                5: ("Extent", "Compactness in bounding box — closer to 1 = tighter fit"),
+                6: ("Solidity", "Shrivelled or broken seeds = lower value"),
+                7: ("Circularity", "Roundness — 1 = perfect circle")
+            }
+
+            for idx, (label, description) in feature_labels.items():
+                st.write(f"**{label}**: {features[0][idx]:.2f} → {description}")
+
+
         except Exception as e:
-            st.error("Error during processing. Make sure the image is clear and well-lit.")
+            st.error("❌ Error during processing. Make sure the image is clear and well-lit.")
             st.exception(e)
