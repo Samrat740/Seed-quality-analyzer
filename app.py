@@ -16,7 +16,7 @@ model = joblib.load(MODEL_PATH)
 # App UI config
 st.set_page_config(page_title="Seed Quality Analyzer", layout="centered")
 st.title("🌾 Seed Quality Analyzer")
-st.markdown("Upload a clear image of a **single seed** to assess its quality.")
+st.markdown("Upload a clear image of a **seed** to assess its quality.")
 
 # Initialize session state
 for key in ["analyzed", "features", "prediction"]:
