@@ -35,6 +35,9 @@ print(f"✅ Dataset shape: {X.shape}, Labels: {set(y)}")
 clf = RandomForestClassifier(n_estimators=100, random_state=42)
 clf.fit(X, y)
 
-# 💾 Save the model
-joblib.dump(clf, "seed_quality_model.pkl")
-print("🎉 Model saved as 'seed_quality_model.pkl'")
+# Ensure directory exists
+os.makedirs("model", exist_ok=True)
+
+# Save/replace model in the 'model' folder
+joblib.dump(clf, "model/seed_quality_model.pkl")
+print("🎉 Model Trained Successfully | Saved as 'model/seed_quality_model.pkl'")
